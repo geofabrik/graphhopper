@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>graphhopper-reader-gtfs</artifactId>
-    <version>11.0-SNAPSHOT</version>
+    <version>11.0-osm-reader-callbacks-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>GraphHopper Reader for Gtfs Data</name>
 
     <parent>
         <groupId>com.graphhopper</groupId>
         <artifactId>graphhopper-parent</artifactId>
-        <version>11.0-SNAPSHOT</version>
+        <version>11.0-osm-reader-callbacks-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -41,12 +41,8 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.mobilitydata.transit</groupId>
+            <groupId>org.mobilitydata</groupId>
             <artifactId>gtfs-realtime-bindings</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -75,6 +71,10 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
         </dependency>
     </dependencies>
     <build>

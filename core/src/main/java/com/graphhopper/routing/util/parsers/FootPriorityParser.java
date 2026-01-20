@@ -11,13 +11,10 @@ import java.util.*;
 import static com.graphhopper.routing.ev.RouteNetwork.*;
 import static com.graphhopper.routing.util.PriorityCode.*;
 import static com.graphhopper.routing.util.parsers.AbstractAccessParser.INTENDED;
-import static com.graphhopper.routing.util.parsers.AbstractAverageSpeedParser.getMaxSpeed;
-import static com.graphhopper.routing.util.parsers.AbstractAverageSpeedParser.isValidSpeed;
 
 public class FootPriorityParser implements TagParser {
     final Set<String> safeHighwayTags = new HashSet<>();
     final Map<String, PriorityCode> avoidHighwayTags = new HashMap<>();
-    protected HashSet<String> sidewalkValues = new HashSet<>(5);
     protected HashSet<String> sidewalksNoValues = new HashSet<>(5);
     protected final DecimalEncodedValue priorityWayEncoder;
     protected EnumEncodedValue<RouteNetwork> footRouteEnc;
@@ -37,11 +34,6 @@ public class FootPriorityParser implements TagParser {
         sidewalksNoValues.add("none");
         // see #712
         sidewalksNoValues.add("separate");
-
-        sidewalkValues.add("yes");
-        sidewalkValues.add("both");
-        sidewalkValues.add("left");
-        sidewalkValues.add("right");
 
         safeHighwayTags.add("footway");
         safeHighwayTags.add("path");
@@ -108,8 +100,8 @@ public class FootPriorityParser implements TagParser {
             weightToPrioMap.put(100d, VERY_BAD); // see #3035
         }
 
-        double maxSpeed = Math.max(getMaxSpeed(way, false), getMaxSpeed(way, true));
-        if (safeHighwayTags.contains(highway) || (isValidSpeed(maxSpeed) && maxSpeed <= 20)) {
+        double maxSpeed = Math.max(OSMMaxSpeedParser.parseMaxSpeed(way, false), OSMMaxSpeedParser.parseMaxSpeed(way, true));
+        if (safeHighwayTags.contains(highway) || (maxSpeed != MaxSpeed.MAXSPEED_MISSING && maxSpeed <= 20)) {
             weightToPrioMap.put(40d, PREFER);
             if (way.hasTag("tunnel", INTENDED)) {
                 if (way.hasTag("sidewalk", sidewalksNoValues))
@@ -117,7 +109,7 @@ public class FootPriorityParser implements TagParser {
                 else
                     weightToPrioMap.put(40d, UNCHANGED);
             }
-        } else if ((isValidSpeed(maxSpeed) && maxSpeed > 50) || avoidHighwayTags.containsKey(highway)) {
+        } else if ((maxSpeed != MaxSpeed.MAXSPEED_MISSING && maxSpeed > 50) || avoidHighwayTags.containsKey(highway)) {
             PriorityCode priorityCode = avoidHighwayTags.get(highway);
             if (way.hasTag("sidewalk", sidewalksNoValues))
                 weightToPrioMap.put(40d, priorityCode == null ? BAD : priorityCode);

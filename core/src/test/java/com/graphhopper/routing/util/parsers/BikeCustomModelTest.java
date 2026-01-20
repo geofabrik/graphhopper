@@ -5,6 +5,7 @@ import com.graphhopper.routing.ev.*;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.OSMParsers;
 import com.graphhopper.routing.util.PriorityCode;
+import com.graphhopper.routing.util.TransportationMode;
 import com.graphhopper.routing.weighting.custom.CustomModelParser;
 import com.graphhopper.routing.weighting.custom.CustomWeighting;
 import com.graphhopper.storage.BaseGraph;
@@ -26,21 +27,26 @@ public class BikeCustomModelTest {
     public void setup() {
         IntEncodedValue bikeRating = MtbRating.create();
         IntEncodedValue hikeRating = HikeRating.create();
+        EnumEncodedValue<BikeRoadAccess> bikeRA = BikeRoadAccess.create();
         em = new EncodingManager.Builder().
                 add(VehicleAccess.create("bike")).
-                add(VehicleAccess.create("mtb")).
-                add(VehicleAccess.create("racingbike")).
                 add(VehicleSpeed.create("bike", 4, 2, false)).
-                add(VehicleSpeed.create("mtb", 4, 2, false)).
-                add(VehicleSpeed.create("racingbike", 4, 2, false)).
                 add(VehiclePriority.create("bike", 4, PriorityCode.getFactor(1), false)).
+                add(VehicleAccess.create("mtb")).
+                add(VehicleSpeed.create("mtb", 4, 2, false)).
                 add(VehiclePriority.create("mtb", 4, PriorityCode.getFactor(1), false)).
+                add(VehicleAccess.create("racingbike")).
+                add(VehicleSpeed.create("racingbike", 4, 2, false)).
                 add(VehiclePriority.create("racingbike", 4, PriorityCode.getFactor(1), false)).
                 add(FerrySpeed.create()).
+                add(Country.create()).
+                add(RoadClass.create()).
                 add(RouteNetwork.create(BikeNetwork.KEY)).
                 add(Roundabout.create()).
                 add(Smoothness.create()).
                 add(RoadAccess.create()).
+                add(bikeRA).
+                add(FootRoadAccess.create()).
                 add(bikeRating).
                 add(hikeRating).build();
 
@@ -57,6 +63,9 @@ public class BikeCustomModelTest {
         parsers.addWayTagParser(new BikePriorityParser(em));
         parsers.addWayTagParser(new MountainBikePriorityParser(em));
         parsers.addWayTagParser(new RacingBikePriorityParser(em));
+        parsers.addWayTagParser(new OSMRoadAccessParser<>(bikeRA,
+                OSMRoadAccessParser.toOSMRestrictions(TransportationMode.BIKE),
+                (readerWay, accessValue) -> accessValue, BikeRoadAccess::find));
     }
 
     EdgeIteratorState createEdge(ReaderWay way) {
@@ -98,6 +107,12 @@ public class BikeCustomModelTest {
         edge = createEdge(way);
         assertEquals(0.0, p.getEdgeToPriorityMapping().get(edge, false), 0.01);
         assertEquals(4.0, p.getEdgeToSpeedMapping().get(edge, false), 0.01);
+
+        way.clearTags();
+        way.setTag("highway", "tertiary");
+        way.setTag("vehicle", "destination");
+        edge = createEdge(way);
+        assertEquals(6, p.getEdgeToSpeedMapping().get(edge, false), 0.01);
     }
 
     @Test

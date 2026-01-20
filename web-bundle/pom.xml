@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>graphhopper-web-bundle</artifactId>
     <packaging>jar</packaging>
-    <version>11.0-SNAPSHOT</version>
+    <version>11.0-osm-reader-callbacks-SNAPSHOT</version>
     <properties>
-        <graphhopper-maps.version>0.0.0-4718098d1db1798841a4d12f1727e8e8f7eab202
+        <graphhopper-maps.version>0.0.0-f171bcf55e447bf494348dd274cd377b73c951f6
         </graphhopper-maps.version>
     </properties>
     <name>GraphHopper Dropwizard Bundle</name>
@@ -16,7 +16,7 @@
     <parent>
         <groupId>com.graphhopper</groupId>
         <artifactId>graphhopper-parent</artifactId>
-        <version>11.0-SNAPSHOT</version>
+        <version>11.0-osm-reader-callbacks-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -41,17 +41,6 @@
             <version>${project.parent.version}</version>
         </dependency>
 
-        <!-- required for JDK9 -->
-        <dependency>
-            <groupId>javax.xml.ws</groupId>
-            <artifactId>jaxws-api</artifactId>
-            <version>2.3.1</version>
-        </dependency>
-        <!-- required for dropwizard -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
@@ -71,8 +60,8 @@
             <artifactId>jts-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-xml-provider</artifactId>
+            <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+            <artifactId>jackson-jakarta-rs-xml-provider</artifactId>
         </dependency>
 
         <!-- Pt and/or map-matching and/or isochrone web client dependencies-->

@@ -47,9 +47,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.util.*;
 
@@ -93,9 +93,12 @@ public class RouteResourceTest {
                 // adding this so the corresponding check is not just skipped...
                 putObject(MAX_NON_CH_POINT_DISTANCE, 10e6).
                 putObject("routing.snap_preventions_default", "tunnel, bridge, ferry").
-                putObject("graph.encoded_values", "road_class, surface, road_environment, max_speed, country, car_access, car_average_speed").
-                setProfiles(Collections.singletonList(TestProfiles.accessAndSpeed("my_car", "car"))).
-                setCHProfiles(Collections.singletonList(new CHProfile("my_car")));
+                putObject("graph.encoded_values", "road_class, surface, road_environment, max_speed, country, " +
+                        "car_access, car_average_speed, " +
+                        "foot_access, foot_priority, foot_average_speed").
+                setProfiles(List.of(TestProfiles.accessAndSpeed("my_car", "car"),
+                        TestProfiles.accessSpeedAndPriority("foot"))).
+                setCHProfiles(List.of(new CHProfile("my_car"), new CHProfile("foot")));
         return config;
     }
 
@@ -291,9 +294,9 @@ public class RouteResourceTest {
 
         List<PathDetail> edgeIdDetails = pathDetails.get("edge_id");
         assertEquals(78, edgeIdDetails.size());
-        assertEquals(924L, edgeIdDetails.get(0).getValue());
+        assertEquals(822L, edgeIdDetails.get(0).getValue());
         assertEquals(2, edgeIdDetails.get(0).getLength());
-        assertEquals(925L, edgeIdDetails.get(1).getValue());
+        assertEquals(844L, edgeIdDetails.get(1).getValue());
         assertEquals(9, edgeIdDetails.get(1).getLength());
 
         long expectedTime = rsp.getBest().getTime();
@@ -334,6 +337,7 @@ public class RouteResourceTest {
         JsonNode infoJson = json.get("info");
         assertFalse(infoJson.has("errors"));
         JsonNode path = json.get("paths").get(0);
+        assertEquals(9203.674, path.get("distance").asDouble(), .1);
         assertTrue(path.has("details"));
         JsonNode details = path.get("details");
         assertTrue(details.has("average_speed"));
@@ -346,8 +350,8 @@ public class RouteResourceTest {
         JsonNode edgeIds = details.get("edge_id");
         int firstLink = edgeIds.get(0).get(2).asInt();
         int lastLink = edgeIds.get(edgeIds.size() - 1).get(2).asInt();
-        assertEquals(924, firstLink);
-        assertEquals(1584, lastLink);
+        assertEquals(822, firstLink);
+        assertEquals(1630, lastLink);
 
         JsonNode maxSpeed = details.get("max_speed");
         assertEquals("[0,34,50.0]", maxSpeed.get(0).toString());
@@ -383,6 +387,16 @@ public class RouteResourceTest {
         rsp = hopper.route(request);
         assertFalse(rsp.hasErrors());
         assertEquals("Carrer Antoni Fiter i Rossell", rsp.getBest().getInstructions().get(3).getName());
+    }
+
+    @Test
+    public void testFootInstructionForReverseCarOnewayInRoundabout() {
+        JsonNode json = clientTarget(app, "/route?profile=foot&" +
+                "point=42.512263%2C1.535468&point=42.512938%2C1.534875").request().get(JsonNode.class);
+        JsonNode path = json.get("paths").get(0);
+        assertEquals(103, path.get("distance").asDouble(), 1);
+        JsonNode n = path.get("instructions").get(1);
+        assertEquals("At roundabout, take exit 1 onto Avigunda Sant Antoni, Avinguda Fiter i Rossell", n.get("text").asText());
     }
 
     @Test
@@ -506,7 +520,7 @@ public class RouteResourceTest {
         assertTrue(ex instanceof IllegalArgumentException, "Wrong exception found: " + ex.getClass().getName()
                 + ", IllegalArgumentException expected.");
         assertTrue(ex.getMessage().contains("The requested profile 'SPACE-SHUTTLE' does not exist." +
-                "\nAvailable profiles: [my_car]"), ex.getMessage());
+                "\nAvailable profiles: [my_car, foot]"), ex.getMessage());
 
         // an IllegalArgumentException from inside the core is written as JSON, unknown profile
         response = getWithStatus(clientTarget(app, "/route?profile=SPACE-SHUTTLE&point=42.554851,1.536198&point=42.510071,1.548128"));

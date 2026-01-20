@@ -31,7 +31,7 @@ public class HikeCustomModelTest {
                 add(VehiclePriority.create("foot", 4, PriorityCode.getFactor(1), false)).
                 add(FerrySpeed.create()).
                 add(RouteNetwork.create(FootNetwork.KEY)).
-                add(RoadAccess.create()).
+                add(FootRoadAccess.create()).
                 add(hikeRating).build();
 
         parsers = new OSMParsers().
@@ -45,8 +45,7 @@ public class HikeCustomModelTest {
     EdgeIteratorState createEdge(ReaderWay way) {
         BaseGraph graph = new BaseGraph.Builder(em).create();
         EdgeIteratorState edge = graph.edge(0, 1);
-        EdgeIntAccess edgeIntAccess = graph.getEdgeAccess();
-        parsers.handleWayTags(edge.getEdge(), edgeIntAccess, way, em.createRelationFlags());
+        parsers.handleWayTags(edge.getEdge(), graph.getEdgeAccess(), way, em.createRelationFlags());
         return edge;
     }
 

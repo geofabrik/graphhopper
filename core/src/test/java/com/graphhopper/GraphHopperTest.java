@@ -20,7 +20,6 @@ package com.graphhopper;
 import com.graphhopper.config.CHProfile;
 import com.graphhopper.config.LMProfile;
 import com.graphhopper.config.Profile;
-import com.graphhopper.util.TurnCostsConfig;
 import com.graphhopper.reader.ReaderWay;
 import com.graphhopper.reader.dem.SRTMProvider;
 import com.graphhopper.reader.dem.SkadiProvider;
@@ -105,8 +104,8 @@ public class GraphHopperTest {
             ASTAR + ",false,361",
             DIJKSTRA_BI + ",false,340",
             ASTAR_BI + ",false,192",
-            ASTAR_BI + ",true,46",
-            DIJKSTRA_BI + ",true,51"
+            DIJKSTRA_BI + ",true,45",
+            ASTAR_BI + ",true,43",
     })
     public void testMonacoDifferentAlgorithms(String algo, boolean withCH, int expectedVisitedNodes) {
         GraphHopper hopper = new GraphHopper().
@@ -465,10 +464,10 @@ public class GraphHopperTest {
         assertEquals(3, rsp.getAll().size());
         // via ramsenthal
         assertEquals(2636, rsp.getAll().get(0).getTime() / 1000);
+        // via eselslohe
+        assertEquals(2783, rsp.getAll().get(1).getTime() / 1000);
         // via unterwaiz
-        assertEquals(2985, rsp.getAll().get(1).getTime() / 1000);
-        // via eselslohe -> theta; BTW: here smaller time as 2nd alternative due to priority influences time order
-        assertEquals(2783, rsp.getAll().get(2).getTime() / 1000);
+        assertEquals(2985, rsp.getAll().get(2).getTime() / 1000);
     }
 
     @Test

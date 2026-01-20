@@ -76,6 +76,10 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("scenic", "yes");
         assertPriorityAndSpeed(AVOID_MORE, 18, way);
 
+        way.clearTags();
+        way.setTag("highway", "living_street");
+        assertPriorityAndSpeed(UNCHANGED, 6, way);
+
         // Pushing section: this is fine as we obey the law!
         way.clearTags();
         way.setTag("highway", "footway");
@@ -165,11 +169,11 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.clearTags();
         way.setTag("highway", "track");
         way.setTag("bicycle", "designated");
-        way.setTag("segregated","no");
+        way.setTag("segregated", "no");
         assertPriorityAndSpeed(PREFER, 12, way);
         way.setTag("surface", "asphalt");
         assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
-        way.setTag("tracktype","grade1");
+        way.setTag("tracktype", "grade1");
         assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
         way.removeTag("surface");
         assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
@@ -224,6 +228,12 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("vehicle", "no");
         assertPriorityAndSpeed(UNCHANGED, PUSHING_SECTION_SPEED, way);
         way.setTag("vehicle", "forestry;agricultural");
+        assertPriorityAndSpeed(UNCHANGED, PUSHING_SECTION_SPEED, way);
+
+        way.clearTags();
+        way.setTag("highway", "track");
+        way.setTag("surface", "concrete");
+        way.setTag("vehicle", "agricultural");
         assertPriorityAndSpeed(UNCHANGED, PUSHING_SECTION_SPEED, way);
 
         way.clearTags();
@@ -364,6 +374,14 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
     }
 
     @Test
+    public void testLowMaxSpeedIsIgnored() {
+        ReaderWay way = new ReaderWay(1);
+        way.setTag("highway", "residential");
+        way.setTag("maxspeed", "3");
+        assertEquals(18, getSpeedFromFlags(way), 0.01);
+    }
+
+    @Test
     public void testCycleway() {
         ReaderWay way = new ReaderWay(1);
         way.setTag("highway", "primary");
@@ -457,8 +475,9 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         assertTrue(accessParser.getAccess(way).isWay());
 
         way.clearTags();
+        // exclude bridleway for a single country via custom model
         way.setTag("highway", "bridleway");
-        assertTrue(accessParser.getAccess(way).canSkip());
+        assertTrue(accessParser.getAccess(way).isWay());
         way.setTag("bicycle", "yes");
         assertTrue(accessParser.getAccess(way).isWay());
 
@@ -487,16 +506,16 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
 
         // "lcn=yes" is in fact no relation, but shall be treated the same like a relation with "network=lcn"
         osmWay.setTag("lcn", "yes");
-        assertPriorityAndSpeed(PREFER, 12, osmWay);
+        assertPriorityAndSpeed(VERY_NICE, 12, osmWay);
         osmWay.removeTag("lcn");
 
-        // relation code is PREFER
+        // relation code is VERY_NICE
         ReaderRelation osmRel = new ReaderRelation(1);
         osmRel.setTag("route", "bicycle");
-        assertPriorityAndSpeed(PREFER, 12, osmWay, osmRel);
+        assertPriorityAndSpeed(VERY_NICE, 12, osmWay, osmRel);
 
         osmRel.setTag("network", "lcn");
-        assertPriorityAndSpeed(PREFER, 12, osmWay, osmRel);
+        assertPriorityAndSpeed(VERY_NICE, 12, osmWay, osmRel);
 
         // relation code is NICE
         osmRel.setTag("network", "rcn");
@@ -513,7 +532,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         osmWay.setTag("highway", "tertiary");
         osmRel.setTag("route", "bicycle");
         osmRel.setTag("network", "lcn");
-        assertPriorityAndSpeed(PREFER, 18, osmWay, osmRel);
+        assertPriorityAndSpeed(VERY_NICE, 18, osmWay, osmRel);
     }
 
     @Test
@@ -682,10 +701,29 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         access = new ArrayEdgeIntAccess(1);
         way = new ReaderWay(1);
         way.setTag("highway", "primary");
-        way.setTag("access", "no");
-        way.setTag("bicycle:conditional", "yes @ (May - June)");
+        way.setTag("bicycle", "no");
+        way.setTag("bicycle:conditional", "yes @ (21:00-9:00)");
         accessParser.handleWayTags(edgeId, access, way, null);
         assertTrue(accessEnc.getBool(false, edgeId, access));
+    }
+
+    @Test
+    public void temporalAccessWithPermit() {
+        BikeCommonAccessParser tmpAccessParser = createAccessParser(encodingManager, new PMap("block_private=false"));
+
+        ReaderWay way = new ReaderWay(1);
+        way.setTag("highway", "primary");
+        way.setTag("bicycle", "no");
+        way.setTag("bicycle:conditional", "permit @ (21:00-9:00)");
+
+        int edgeId = 0;
+        ArrayEdgeIntAccess access = new ArrayEdgeIntAccess(1);
+        tmpAccessParser.handleWayTags(edgeId, access, way, null);
+        assertTrue(accessEnc.getBool(false, edgeId, access));
+
+        access = new ArrayEdgeIntAccess(1);
+        accessParser.handleWayTags(edgeId, access, way, null);
+        assertFalse(accessEnc.getBool(false, edgeId, access));
     }
 
     @Test
