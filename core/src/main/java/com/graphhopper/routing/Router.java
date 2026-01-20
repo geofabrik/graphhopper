@@ -186,7 +186,7 @@ public class Router {
             throw new IllegalArgumentException("CustomModel of query cannot be internal");
     }
 
-    protected Solver createSolver(GHRequest request) {
+    public Solver createSolver(GHRequest request) {
         final boolean disableCH = getDisableCH(request.getHints());
         final boolean disableLM = getDisableLM(request.getHints());
         if (chEnabled && !disableCH) {
@@ -346,7 +346,7 @@ public class Router {
         return hints.getBool(PASS_THROUGH, false);
     }
 
-    private static String getCurbsideStrictness(PMap hints) {
+    public static String getCurbsideStrictness(PMap hints) {
         if (hints.has(CURBSIDE_STRICTNESS)) return hints.getString(CURBSIDE_STRICTNESS, "strict");
 
         // legacy
