@@ -15,34 +15,27 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.graphhopper.routing.util.countryrules.europe;
 
-import com.graphhopper.reader.ReaderWay;
-import com.graphhopper.routing.ev.RoadClass;
-import com.graphhopper.routing.ev.Toll;
-import com.graphhopper.routing.util.countryrules.CountryRule;
+package com.graphhopper.application.resources;
 
-/**
- * Defines the default rules for Romanian roads
- *
- * @author Thomas Butz
- */
-public class RomaniaSpatialRule implements CountryRule {
+import com.fasterxml.jackson.databind.JsonNode;
+import com.graphhopper.util.BodyAndStatus;
 
-    @Override
-    public Toll getToll(ReaderWay readerWay, Toll currentToll) {
-        if (currentToll != Toll.MISSING) {
-            return currentToll;
-        }
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
-        RoadClass roadClass = RoadClass.find(readerWay.getTag("highway", ""));
-        switch (roadClass) {
-            case MOTORWAY:
-            case TRUNK:
-            case PRIMARY:
-                return Toll.ALL;
-            default:
-                return currentToll;
+public class Util {
+    public static BodyAndStatus getWithStatus(WebTarget webTarget) {
+        try (Response response = webTarget.request().get()) {
+            return new BodyAndStatus(response.readEntity(JsonNode.class), response.getStatus());
         }
     }
+
+    public static BodyAndStatus postWithStatus(WebTarget webTarget, String json) {
+        try (Response response = webTarget.request().post(Entity.json(json))) {
+            return new BodyAndStatus(response.readEntity(JsonNode.class), response.getStatus());
+        }
+    }
+
 }

@@ -188,7 +188,10 @@ public class IntEncodedValueImpl implements IntEncodedValue {
     }
 
     @Override
-    public int getInt(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess) {
+    public final int getInt(boolean reverse, int edgeId, EdgeIntAccess edgeIntAccess) {
+        assert fwdShift >= 0 : "incorrect shift " + fwdShift + " for " + getName();
+        assert bits > 0 : "incorrect bits " + bits + " for " + getName();
+
         int flags;
         // if we do not store both directions ignore reverse == true for convenient reading
         if (storeTwoDirections && reverse) {

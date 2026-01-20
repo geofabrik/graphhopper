@@ -70,6 +70,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import java.util.logging.Level;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import static com.graphhopper.util.GHUtility.readCountries;
 import static com.graphhopper.util.Helper.*;
 import static com.graphhopper.util.Parameters.Algorithms.RoundTrip;
@@ -643,16 +647,19 @@ public class GraphHopper {
     protected OSMParsers buildOSMParsers(Map<String, PMap> encodedValuesWithProps,
                                          Map<String, ImportUnit> activeImportUnits,
                                          Map<String, List<String>> restrictionVehicleTypesByProfile,
-                                         List<String> ignoredHighways, String dateRangeParserString) {
+                                         List<String> ignoredHighways) {
         ImportUnitSorter sorter = new ImportUnitSorter(activeImportUnits);
         Map<String, ImportUnit> sortedImportUnits = new LinkedHashMap<>();
         sorter.sort().forEach(name -> sortedImportUnits.put(name, activeImportUnits.get(name)));
-        DateRangeParser dateRangeParser = DateRangeParser.createInstance(dateRangeParserString);
         List<TagParser> sortedParsers = new ArrayList<>();
         sortedImportUnits.forEach((name, importUnit) -> {
             BiFunction<EncodedValueLookup, PMap, TagParser> createTagParser = importUnit.getCreateTagParser();
-            if (createTagParser != null)
-                sortedParsers.add(createTagParser.apply(encodingManager, encodedValuesWithProps.getOrDefault(name, new PMap().putObject("date_range_parser", dateRangeParser))));
+            if (createTagParser != null) {
+                PMap pmap = encodedValuesWithProps.getOrDefault(name, new PMap());
+                if (!pmap.has("date_range_parser_day"))
+                    pmap.putObject("date_range_parser_day", dateRangeParserString);
+                sortedParsers.add(createTagParser.apply(encodingManager, pmap));
+            }
         });
 
         OSMParsers osmParsers = osmParsersSupplier.get();
@@ -682,7 +689,11 @@ public class GraphHopper {
         Map<String, PMap> encodedValuesWithProps = new LinkedHashMap<>();
         Arrays.stream(encodedValuesStr.split(","))
                 .filter(evStr -> !evStr.isBlank())
-                .forEach(evStr -> encodedValuesWithProps.put(evStr.trim().split("\\|")[0], new PMap(evStr)));
+                .forEach(evStr -> {
+                    String key = evStr.trim().split("\\|")[0];
+                    if (encodedValuesWithProps.put(key, new PMap(evStr)) != null)
+                        throw new IllegalArgumentException("duplicate encoded value in config graph.encoded_values: " + key);
+                });
         return encodedValuesWithProps;
     }
 
@@ -888,7 +899,7 @@ public class GraphHopper {
                 deque.addAll(importUnit.getRequiredImportUnits());
         }
         encodingManager = buildEncodingManager(encodedValuesWithProps, activeImportUnits, restrictionVehicleTypesByProfile);
-        osmParsers = buildOSMParsers(encodedValuesWithProps, activeImportUnits, restrictionVehicleTypesByProfile, osmReaderConfig.getIgnoredHighways(), dateRangeParserString);
+        osmParsers = buildOSMParsers(encodedValuesWithProps, activeImportUnits, restrictionVehicleTypesByProfile, osmReaderConfig.getIgnoredHighways());
     }
 
     protected void postImportOSM() {
@@ -1499,11 +1510,15 @@ public class GraphHopper {
         if (!customAreasDirectory.isEmpty()) {
             ObjectMapper mapper = new ObjectMapper().registerModule(new JtsModule());
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(customAreasDirectory), "*.{geojson,json}")) {
-                for (Path customAreaFile : stream) {
-                    try (BufferedReader reader = Files.newBufferedReader(customAreaFile, StandardCharsets.UTF_8)) {
-                        globalAreas.getFeatures().addAll(mapper.readValue(reader, JsonFeatureCollection.class).getFeatures());
-                    }
-                }
+                StreamSupport.stream(stream.spliterator(), false)
+                        .sorted(Comparator.comparing(Path::toString))
+                        .forEach(customAreaFile -> {
+                            try (BufferedReader reader = Files.newBufferedReader(customAreaFile, StandardCharsets.UTF_8)) {
+                                globalAreas.getFeatures().addAll(mapper.readValue(reader, JsonFeatureCollection.class).getFeatures());
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
                 logger.info("Will make " + globalAreas.getFeatures().size() + " areas available to all custom profiles. Found in " + customAreasDirectory);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

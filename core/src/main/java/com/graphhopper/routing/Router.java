@@ -49,11 +49,11 @@ import com.graphhopper.util.shapes.GHPoint;
 
 import java.util.*;
 
-import static com.graphhopper.config.TurnCostsConfig.INFINITE_U_TURN_COSTS;
 import static com.graphhopper.util.DistanceCalcEarth.DIST_EARTH;
 import static com.graphhopper.util.Parameters.Algorithms.ALT_ROUTE;
 import static com.graphhopper.util.Parameters.Algorithms.ROUND_TRIP;
 import static com.graphhopper.util.Parameters.Routing.*;
+import static com.graphhopper.util.TurnCostsConfig.INFINITE_U_TURN_COSTS;
 
 public class Router {
     protected final BaseGraph graph;
@@ -103,6 +103,7 @@ public class Router {
             checkPointHints(request);
             checkCurbsides(request);
             checkNoBlockArea(request);
+            checkCustomModel(request);
 
             Solver solver = createSolver(request);
             solver.checkRequest();
@@ -180,7 +181,12 @@ public class Router {
             throw new IllegalArgumentException("The `block_area` parameter is no longer supported. Use a custom model with `areas` instead.");
     }
 
-    public Solver createSolver(GHRequest request) {
+    private void checkCustomModel(GHRequest request) {
+        if (request.getCustomModel() != null && request.getCustomModel().isInternal())
+            throw new IllegalArgumentException("CustomModel of query cannot be internal");
+    }
+
+    protected Solver createSolver(GHRequest request) {
         final boolean disableCH = getDisableCH(request.getHints());
         final boolean disableLM = getDisableLM(request.getHints());
         if (chEnabled && !disableCH) {
@@ -243,13 +249,14 @@ public class Router {
         QueryGraph queryGraph = QueryGraph.create(graph, snaps);
         PathCalculator pathCalculator = solver.createPathCalculator(queryGraph);
         boolean passThrough = getPassThrough(request.getHints());
-        boolean forceCurbsides = getForceCurbsides(request.getHints());
+        String curbsideStrictness = getCurbsideStrictness(request.getHints());
         if (passThrough)
             throw new IllegalArgumentException("Alternative paths and " + PASS_THROUGH + " at the same time is currently not supported");
         if (!request.getCurbsides().isEmpty())
             throw new IllegalArgumentException("Alternative paths do not support the " + CURBSIDE + " parameter yet");
 
-        ViaRouting.Result result = ViaRouting.calcPaths(request.getPoints(), queryGraph, snaps, directedEdgeFilter, pathCalculator, request.getCurbsides(), forceCurbsides, request.getHeadings(), passThrough);
+        ViaRouting.Result result = ViaRouting.calcPaths(request.getPoints(), queryGraph, snaps, directedEdgeFilter,
+                pathCalculator, request.getCurbsides(), curbsideStrictness, request.getHeadings(), passThrough);
         if (result.paths.isEmpty())
             throw new RuntimeException("Empty paths for alternative route calculation not expected");
 
@@ -277,9 +284,9 @@ public class Router {
         QueryGraph queryGraph = QueryGraph.create(graph, snaps);
         PathCalculator pathCalculator = solver.createPathCalculator(queryGraph);
         boolean passThrough = getPassThrough(request.getHints());
-        boolean forceCurbsides = getForceCurbsides(request.getHints());
+        String curbsideStrictness = getCurbsideStrictness(request.getHints());
         ViaRouting.Result result = ViaRouting.calcPaths(request.getPoints(), queryGraph, snaps, directedEdgeFilter,
-                pathCalculator, request.getCurbsides(), forceCurbsides, request.getHeadings(), passThrough);
+                pathCalculator, request.getCurbsides(), curbsideStrictness, request.getHeadings(), passThrough);
 
         if (request.getPoints().size() != result.paths.size() + 1)
             throw new RuntimeException("There should be exactly one more point than paths. points:" + request.getPoints().size() + ", paths:" + result.paths.size());
@@ -339,8 +346,11 @@ public class Router {
         return hints.getBool(PASS_THROUGH, false);
     }
 
-    private static boolean getForceCurbsides(PMap hints) {
-        return hints.getBool(FORCE_CURBSIDE, true);
+    private static String getCurbsideStrictness(PMap hints) {
+        if (hints.has(CURBSIDE_STRICTNESS)) return hints.getString(CURBSIDE_STRICTNESS, "strict");
+
+        // legacy
+        return hints.getBool("force_curbside", true) ? "strict" : "soft";
     }
 
     public static abstract class Solver {
@@ -576,7 +586,7 @@ public class Router {
                 throw new IllegalArgumentException("Cannot find LM preparation for the requested profile: '" + profile.getName() + "'" +
                         "\nYou can try disabling LM using " + Parameters.Landmark.DISABLE + "=true" +
                         "\navailable LM profiles: " + landmarks.keySet());
-            if (request.getCustomModel() != null && !request.getHints().getBool("lm.disable", false))
+            if (request.getCustomModel() != null)
                 FindMinMax.checkLMConstraints(profile.getCustomModel(), request.getCustomModel(), lookup);
             RoutingAlgorithmFactory routingAlgorithmFactory = new LMRoutingAlgorithmFactory(landmarkStorage).setDefaultActiveLandmarks(routerConfig.getActiveLandmarkCount());
             return new FlexiblePathCalculator(queryGraph, routingAlgorithmFactory, weighting, getAlgoOpts());

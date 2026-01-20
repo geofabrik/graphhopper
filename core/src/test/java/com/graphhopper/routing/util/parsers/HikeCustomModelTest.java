@@ -1,7 +1,6 @@
 package com.graphhopper.routing.util.parsers;
 
 import com.graphhopper.reader.ReaderWay;
-import com.graphhopper.reader.osm.conditional.DateRangeParser;
 import com.graphhopper.routing.ev.*;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.OSMParsers;
@@ -46,7 +45,7 @@ public class HikeCustomModelTest {
     EdgeIteratorState createEdge(ReaderWay way) {
         BaseGraph graph = new BaseGraph.Builder(em).create();
         EdgeIteratorState edge = graph.edge(0, 1);
-        EdgeIntAccess edgeIntAccess = graph.createEdgeIntAccess();
+        EdgeIntAccess edgeIntAccess = graph.getEdgeAccess();
         parsers.handleWayTags(edge.getEdge(), edgeIntAccess, way, em.createRelationFlags());
         return edge;
     }
@@ -62,12 +61,10 @@ public class HikeCustomModelTest {
 
         way.setTag("motor_vehicle", "private");
         edge = createEdge(way);
-        p = CustomModelParser.createWeightingParameters(cm, em);
         assertEquals(1.2, p.getEdgeToPriorityMapping().get(edge, false), 0.01);
 
         way.setTag("sac_scale", "alpine_hiking");
         edge = createEdge(way);
-        p = CustomModelParser.createWeightingParameters(cm, em);
         assertEquals(1.2, p.getEdgeToPriorityMapping().get(edge, false), 0.01);
         assertEquals(1.5, p.getEdgeToSpeedMapping().get(edge, false), 0.01);
 
@@ -75,12 +72,10 @@ public class HikeCustomModelTest {
         way.setTag("highway", "track");
         way.setTag("access", "private");
         edge = createEdge(way);
-        p = CustomModelParser.createWeightingParameters(cm, em);
         assertEquals(0, p.getEdgeToPriorityMapping().get(edge, false), 0.01);
 
         way.setTag("sac_scale", "alpine_hiking");
         edge = createEdge(way);
-        p = CustomModelParser.createWeightingParameters(cm, em);
         assertEquals(0, p.getEdgeToPriorityMapping().get(edge, false), 0.01);
     }
 }

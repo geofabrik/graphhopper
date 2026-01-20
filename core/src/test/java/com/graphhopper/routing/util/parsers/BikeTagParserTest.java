@@ -97,9 +97,9 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.clearTags();
         way.setTag("highway", "footway");
         way.setTag("bicycle", "yes");
-        assertPriorityAndSpeed(PREFER, 10, way);
+        assertPriorityAndSpeed(PREFER, 12, way);
         way.setTag("segregated", "no");
-        assertPriorityAndSpeed(PREFER, 10, way);
+        assertPriorityAndSpeed(PREFER, 12, way);
         way.setTag("segregated", "yes");
         assertPriorityAndSpeed(PREFER, 18, way);
 
@@ -107,7 +107,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("highway", "footway");
         way.setTag("surface", "paved");
         way.setTag("bicycle", "yes");
-        assertPriorityAndSpeed(PREFER, 10, way);
+        assertPriorityAndSpeed(PREFER, 12, way);
         way.setTag("surface", "cobblestone");
         assertPriorityAndSpeed(PREFER, 8, way);
         way.setTag("segregated", "yes");
@@ -118,7 +118,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("highway", "platform");
         way.setTag("surface", "paved");
         way.setTag("bicycle", "yes");
-        assertPriorityAndSpeed(PREFER, 10, way);
+        assertPriorityAndSpeed(PREFER, 12, way);
         way.setTag("segregated", "yes");
         assertPriorityAndSpeed(PREFER, 18, way);
 
@@ -151,7 +151,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
 
         way.setTag("bicycle", "yes");
-        assertPriorityAndSpeed(PREFER, 10, way);
+        assertPriorityAndSpeed(PREFER, 12, way);
 
         way.setTag("segregated", "yes");
         assertPriorityAndSpeed(PREFER, cyclewaySpeed, way);
@@ -161,6 +161,18 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
 
         way.setTag("surface", "paved");
         assertPriorityAndSpeed(PREFER, 18, way);
+
+        way.clearTags();
+        way.setTag("highway", "track");
+        way.setTag("bicycle", "designated");
+        way.setTag("segregated","no");
+        assertPriorityAndSpeed(PREFER, 12, way);
+        way.setTag("surface", "asphalt");
+        assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
+        way.setTag("tracktype","grade1");
+        assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
+        way.removeTag("surface");
+        assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
 
         way.clearTags();
         way.setTag("highway", "path");
@@ -178,6 +190,12 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         assertPriorityAndSpeed(SLIGHT_AVOID, PUSHING_SECTION_SPEED, way);
 
         way.clearTags();
+        way.setTag("highway", "path");
+        way.setTag("bicycle", "designated");
+        way.setTag("tracktype", "grade4");
+        assertPriorityAndSpeed(VERY_NICE, 6, way);
+
+        way.clearTags();
         way.setTag("highway", "platform");
         way.setTag("surface", "paved");
         assertPriorityAndSpeed(SLIGHT_AVOID, PUSHING_SECTION_SPEED, way);
@@ -187,6 +205,12 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("surface", "paved");
         way.setTag("bicycle", "designated");
         assertPriorityAndSpeed(VERY_NICE, cyclewaySpeed, way);
+        way.clearTags();
+
+        way.setTag("highway", "footway");
+        way.setTag("tracktype", "grade4");
+        way.setTag("bicycle", "designated");
+        assertPriorityAndSpeed(VERY_NICE, 6, way);
 
         way.clearTags();
         way.setTag("highway", "platform");
@@ -197,7 +221,13 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.clearTags();
         way.setTag("highway", "track");
         assertPriorityAndSpeed(UNCHANGED, 12, way);
+        way.setTag("vehicle", "no");
+        assertPriorityAndSpeed(UNCHANGED, PUSHING_SECTION_SPEED, way);
+        way.setTag("vehicle", "forestry;agricultural");
+        assertPriorityAndSpeed(UNCHANGED, PUSHING_SECTION_SPEED, way);
 
+        way.clearTags();
+        way.setTag("highway", "track");
         way.setTag("tracktype", "grade1");
         assertPriorityAndSpeed(UNCHANGED, 18, way);
 
@@ -228,6 +258,8 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
 
         way.clearTags();
         way.setTag("highway", "track");
+        assertPriorityAndSpeed(UNCHANGED, 12, way);
+
         way.setTag("surface", "paved");
         assertPriorityAndSpeed(UNCHANGED, 18, way);
 
@@ -278,6 +310,21 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.clearTags();
         way.setTag("highway", "trunk");
         assertPriorityAndSpeed(REACH_DESTINATION, 18, way);
+
+        way.clearTags();
+        way.setTag("highway", "cycleway");
+        way.setTag("vehicle", "no");
+        assertPriorityAndSpeed(VERY_NICE, PUSHING_SECTION_SPEED, way);
+        way.setTag("bicycle", "yes");
+        assertPriorityAndSpeed(VERY_NICE, 18, way);
+
+        way.clearTags();
+        way.setTag("highway", "bridleway");
+        assertPriorityAndSpeed(AVOID, PUSHING_SECTION_SPEED, way);
+        way.setTag("surface", "gravel");
+        assertPriorityAndSpeed(AVOID, 12, way);
+        way.setTag("bicycle", "designated");
+        assertPriorityAndSpeed(PREFER, 12, way);
     }
 
     @Test
@@ -383,12 +430,19 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("vehicle", "no");
         assertTrue(accessParser.getAccess(way).isWay());
 
-        // Sensless tagging: JOSM does create a warning here. We follow the highway tag:
+        // Senseless tagging: JOSM does create a warning here:
         way.setTag("bicycle", "no");
-        assertTrue(accessParser.getAccess(way).isWay());
+        assertTrue(accessParser.getAccess(way).canSkip());
 
         way.setTag("bicycle", "designated");
         assertTrue(accessParser.getAccess(way).isWay());
+
+        way.clearTags();
+        way.setTag("highway", "cycleway");
+        way.setTag("access", "no");
+        assertTrue(accessParser.getAccess(way).canSkip());
+        way.setTag("bicycle", "no");
+        assertTrue(accessParser.getAccess(way).canSkip());
 
         way.clearTags();
         way.setTag("highway", "motorway");
@@ -411,9 +465,16 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         way.clearTags();
         way.setTag("highway", "track");
         way.setTag("vehicle", "forestry");
-        assertTrue(accessParser.getAccess(way).canSkip());
+        assertTrue(accessParser.getAccess(way).isWay());
         way.setTag("vehicle", "agricultural;forestry");
-        assertTrue(accessParser.getAccess(way).canSkip());
+        assertTrue(accessParser.getAccess(way).isWay());
+    }
+
+    @Test
+    public void testPreferenceForSlowSpeed() {
+        ReaderWay osmWay = new ReaderWay(1);
+        osmWay.setTag("highway", "tertiary");
+        assertPriority(UNCHANGED, osmWay);
     }
 
     @Test
@@ -466,28 +527,6 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
     }
 
     @Test
-    @Override
-    public void testSacScale() {
-        ReaderWay way = new ReaderWay(1);
-        way.setTag("highway", "path");
-        way.setTag("sac_scale", "hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        way.setTag("highway", "path");
-        way.setTag("sac_scale", "mountain_hiking");
-        assertTrue(accessParser.getAccess(way).canSkip());
-
-        way.setTag("highway", "cycleway");
-        way.setTag("sac_scale", "hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        way.setTag("highway", "cycleway");
-        way.setTag("sac_scale", "mountain_hiking");
-        // disallow questionable combination as too dangerous
-        assertTrue(accessParser.getAccess(way).canSkip());
-    }
-
-    @Test
     public void testCalcPriority() {
         ReaderWay osmWay = new ReaderWay(1);
         osmWay.setTag("highway", "tertiary");
@@ -495,7 +534,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         osmRel.setTag("route", "bicycle");
         osmRel.setTag("network", "icn");
         IntsRef relFlags = osmParsers.handleRelationTags(osmRel, osmParsers.createRelationFlags());
-        EdgeIntAccess edgeIntAccess = new ArrayEdgeIntAccess(encodingManager.getIntsForFlags());
+        EdgeIntAccess edgeIntAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
         int edgeId = 0;
         osmParsers.handleWayTags(edgeId, edgeIntAccess, osmWay, relFlags);
         assertEquals(RouteNetwork.INTERNATIONAL, encodingManager.getEnumEncodedValue(BikeNetwork.KEY, RouteNetwork.class).getEnum(false, edgeId, edgeIntAccess));
@@ -505,7 +544,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         osmRel = new ReaderRelation(1);
         osmWay = new ReaderWay(1);
         osmWay.setTag("highway", "track");
-        edgeIntAccess = new ArrayEdgeIntAccess(encodingManager.getIntsForFlags());
+        edgeIntAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
         osmParsers.handleWayTags(edgeId, edgeIntAccess, osmWay, osmParsers.createRelationFlags());
         assertEquals(RouteNetwork.MISSING, encodingManager.getEnumEncodedValue(BikeNetwork.KEY, RouteNetwork.class).getEnum(false, edgeId, edgeIntAccess));
         assertEquals(PriorityCode.getValue(UNCHANGED.getValue()), priorityEnc.getDecimal(false, edgeId, edgeIntAccess), .1);
@@ -513,7 +552,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         // unknown highway tags will be excluded but priority will be unchanged
         osmWay = new ReaderWay(1);
         osmWay.setTag("highway", "whatever");
-        edgeIntAccess = new ArrayEdgeIntAccess(encodingManager.getIntsForFlags());
+        edgeIntAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
         osmParsers.handleWayTags(edgeId, edgeIntAccess, osmWay, osmParsers.createRelationFlags());
         assertFalse(accessParser.getAccessEnc().getBool(false, edgeId, edgeIntAccess));
         assertEquals(RouteNetwork.MISSING, encodingManager.getEnumEncodedValue(BikeNetwork.KEY, RouteNetwork.class).getEnum(false, edgeId, edgeIntAccess));
@@ -526,7 +565,7 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         ReaderWay way = new ReaderWay(1);
         way.setTag("highway", "tertiary");
         way.setTag("maxspeed", "90");
-        assertPriorityAndSpeed(UNCHANGED, 18, way);
+        assertPriorityAndSpeed(AVOID, 18, way);
 
         way = new ReaderWay(1);
         way.setTag("highway", "track");
@@ -649,4 +688,21 @@ public class BikeTagParserTest extends AbstractBikeTagParserTester {
         assertTrue(accessEnc.getBool(false, edgeId, access));
     }
 
+    @Test
+    public void testPedestrian() {
+        ReaderWay way = new ReaderWay(1);
+        way.setTag("highway", "pedestrian");
+        assertPriorityAndSpeed(SLIGHT_AVOID, 4, way);
+        way.setTag("bicycle", "yes");
+        assertPriorityAndSpeed(PREFER, 12, way);
+        way.setTag("surface", "asphalt");
+        assertPriorityAndSpeed(PREFER, 12, way);
+
+        way.clearTags();
+        way.setTag("highway", "pedestrian");
+        way.setTag("cycleway:right", "track");
+        assertPriorityAndSpeed(PREFER, 18, way);
+        way.setTag("bicycle", "yes");
+        assertPriorityAndSpeed(PREFER, 18, way);
+    }
 }

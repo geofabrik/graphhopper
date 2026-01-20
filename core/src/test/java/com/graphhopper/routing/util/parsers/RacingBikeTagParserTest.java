@@ -97,27 +97,21 @@ public class RacingBikeTagParserTest extends AbstractBikeTagParserTester {
     }
 
     @Test
-    @Override
-    public void testSacScale() {
+    public void testTrack() {
         ReaderWay way = new ReaderWay(1);
-        way.setTag("highway", "service");
-        way.setTag("sac_scale", "mountain_hiking");
-        assertTrue(accessParser.getAccess(way).canSkip());
-
-        way.setTag("highway", "path");
-        way.setTag("sac_scale", "hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        // This looks to be tagging error:
-        way.setTag("highway", "cycleway");
-        way.setTag("sac_scale", "mountain_hiking");
-        // we are cautious and disallow this
-        assertTrue(accessParser.getAccess(way).canSkip());
+        way.setTag("highway", "track");
+        way.setTag("bicycle", "designated");
+        way.setTag("segregated","no");
+        assertPriorityAndSpeed(AVOID_MORE, 2, way);
+        way.setTag("surface", "asphalt");
+        assertPriorityAndSpeed(VERY_NICE, 20, way);
+        way.setTag("tracktype","grade1");
+        assertPriorityAndSpeed(VERY_NICE, 20, way);
     }
 
     @Test
     public void testGetSpeed() {
-        EdgeIntAccess edgeIntAccess = new ArrayEdgeIntAccess(encodingManager.getIntsForFlags());
+        EdgeIntAccess edgeIntAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
         int edgeId = 0;
         avgSpeedEnc.setDecimal(false, edgeId, edgeIntAccess, 10);
         ReaderWay way = new ReaderWay(1);
@@ -208,7 +202,7 @@ public class RacingBikeTagParserTest extends AbstractBikeTagParserTester {
 
         // Now we assume bicycle=yes, and paved
         osmWay.setTag("tracktype", "grade1");
-        assertPriorityAndSpeed(PREFER, 20, osmWay, osmRel);
+        assertPriorityAndSpeed(VERY_NICE, 20, osmWay, osmRel);
 
         // Now we assume bicycle=yes, and unpaved as part of a cycle relation
         osmWay.setTag("tracktype", "grade2");
@@ -293,7 +287,7 @@ public class RacingBikeTagParserTest extends AbstractBikeTagParserTester {
 
     private void assertPriorityAndSpeed(EncodingManager encodingManager, DecimalEncodedValue priorityEnc, DecimalEncodedValue speedEnc,
                                         List<TagParser> parsers, PriorityCode expectedPrio, double expectedSpeed, ReaderWay way) {
-        EdgeIntAccess edgeIntAccess = new ArrayEdgeIntAccess(encodingManager.getIntsForFlags());
+        EdgeIntAccess edgeIntAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
         int edgeId = 0;
         for (TagParser p : parsers) p.handleWayTags(edgeId, edgeIntAccess, way, null);
         assertEquals(PriorityCode.getValue(expectedPrio.getValue()), priorityEnc.getDecimal(false, edgeId, edgeIntAccess), 0.01);
@@ -309,5 +303,12 @@ public class RacingBikeTagParserTest extends AbstractBikeTagParserTester {
 
         way.setTag("class:bicycle", "-2");
         assertPriority(BEST, way);
+    }
+
+    @Test
+    public void testPreferenceForSlowSpeed() {
+        ReaderWay osmWay = new ReaderWay(1);
+        osmWay.setTag("highway", "tertiary");
+        assertPriority(PREFER, osmWay);
     }
 }

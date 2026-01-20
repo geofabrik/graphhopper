@@ -78,8 +78,6 @@ public class MountainBikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("highway", "track");
         assertPriorityAndSpeed(PREFER, 18, way);
 
-        // test speed for allowed pushing section types
-        way.setTag("highway", "track");
         way.setTag("bicycle", "yes");
         assertPriorityAndSpeed(PREFER, 18, way);
 
@@ -87,9 +85,11 @@ public class MountainBikeTagParserTest extends AbstractBikeTagParserTester {
         way.setTag("bicycle", "yes");
         way.setTag("tracktype", "grade3");
         assertPriorityAndSpeed(VERY_NICE, 12, way);
+        way.setTag("tracktype", "grade1");
+        assertPriorityAndSpeed(SLIGHT_PREFER, 18, way);
 
         way.setTag("surface", "paved");
-        assertPriorityAndSpeed(VERY_NICE, 18, way);
+        assertPriorityAndSpeed(SLIGHT_PREFER, 18, way);
 
         way.clearTags();
         way.setTag("highway", "path");
@@ -131,25 +131,6 @@ public class MountainBikeTagParserTest extends AbstractBikeTagParserTester {
 
         way.setTag("smoothness", "impassable");
         assertEquals(MIN_SPEED, getSpeedFromFlags(way), 0.01);
-    }
-
-    @Test
-    @Override
-    public void testSacScale() {
-        ReaderWay way = new ReaderWay(1);
-        way.setTag("highway", "service");
-        way.setTag("sac_scale", "hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        way.setTag("highway", "service");
-        way.setTag("sac_scale", "mountain_hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        way.setTag("sac_scale", "alpine_hiking");
-        assertTrue(accessParser.getAccess(way).isWay());
-
-        way.setTag("sac_scale", "demanding_alpine_hiking");
-        assertTrue(accessParser.getAccess(way).canSkip());
     }
 
     @Test
@@ -232,4 +213,10 @@ public class MountainBikeTagParserTest extends AbstractBikeTagParserTester {
         assertFalse(accessParser.isBarrier(node));
     }
 
+    @Test
+    public void testPreferenceForSlowSpeed() {
+        ReaderWay osmWay = new ReaderWay(1);
+        osmWay.setTag("highway", "tertiary");
+        assertPriority(PREFER, osmWay);
+    }
 }

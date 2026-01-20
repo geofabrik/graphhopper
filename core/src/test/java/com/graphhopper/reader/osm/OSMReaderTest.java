@@ -21,7 +21,7 @@ import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.GraphHopperTest;
-import com.graphhopper.config.TurnCostsConfig;
+import com.graphhopper.util.TurnCostsConfig;
 import com.graphhopper.reader.ReaderElement;
 import com.graphhopper.reader.ReaderRelation;
 import com.graphhopper.reader.ReaderWay;
@@ -282,7 +282,7 @@ public class OSMReaderTest {
         while (iter.next()) {
             assertEquals(DistanceCalcEarth.DIST_EARTH.calcDistance(iter.fetchWayGeometry(FetchMode.ALL)), iter.getDistance(), 1.e-3);
         }
-        assertEquals(35.609, graph.getEdgeIteratorState(0, Integer.MIN_VALUE).getDistance(), 1.e-3);
+        assertEquals(35.612, graph.getEdgeIteratorState(0, Integer.MIN_VALUE).getDistance(), 1.e-3);
         assertEquals(75.256, graph.getEdgeIteratorState(1, Integer.MIN_VALUE).getDistance(), 1.e-3);
         assertEquals(143.332, graph.getEdgeIteratorState(2, Integer.MIN_VALUE).getDistance(), 1.e-3);
     }
