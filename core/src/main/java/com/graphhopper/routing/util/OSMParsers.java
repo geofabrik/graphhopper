@@ -123,8 +123,4 @@ public class OSMParsers {
     public List<RestrictionTagParser> getRestrictionTagParsers() {
         return restrictionTagParsers;
     }
-
-//    public List<TurnCostParser> getTurnCostParsers() {
-//        return turnCostParsers;
-//    }
 }
