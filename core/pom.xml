@@ -43,7 +43,6 @@
         <dependency>
             <groupId>com.carrotsearch</groupId>
             <artifactId>hppc</artifactId>
-            <version>0.8.2</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.janino</groupId>
@@ -118,7 +117,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.13</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
