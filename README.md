@@ -6,6 +6,9 @@ Changes:
 
 * Allow to provide custom callbacks to be called during reading of an OSM file.
 * Add support to add custom turn restrictions at the end of the import.
+* U-turn cost can be taken into account to calculate travel times of routes with u-turns.
+  This feature [was removed upstream](https://github.com/graphhopper/graphhopper/commit/da748e6ae80271e4b69f1b6f341687ee836f5b9b)
+  in version 10. This fork restores it as optional feature.
 * If requested, map matching can return incomplete tracks instead of throwing an exception.
 * Add visibility to some methods to permit overwriting of their implementation.
 * Add transporation mode for trains.

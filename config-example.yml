@@ -18,6 +18,7 @@ graphhopper:
   # - turn_costs (optional):
   #     vehicle_types: [motorcar, motor_vehicle] (vehicle types used for vehicle-specific turn restrictions)
   #     u_turn_costs: 60 (time-penalty for doing a u-turn in seconds)
+  #     enable_uturn_times: true (By default (false), u-turn time penalties will influence the chosen route but they will not increase the calculated travel time.)
   #
   # Depending on the above fields there are other properties that can be used, e.g.
   # - custom_model_files: when you specified "weighting: custom" you need to set one or more json files which are searched in

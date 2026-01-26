@@ -12,6 +12,7 @@ public class TurnCostsConfig {
     private int uTurnCosts = INFINITE_U_TURN_COSTS;
     private List<String> vehicleTypes;
     private boolean allowTurnPenaltyInRequest;
+    private boolean enableUTurnTimes;
 
     // ensure that no typos can occur like motor_car vs motorcar or bike vs bicycle
     private static final Set<String> ALL_SUPPORTED = Set.of(
@@ -39,6 +40,7 @@ public class TurnCostsConfig {
         uTurnCosts = copy.uTurnCosts;
         if (copy.vehicleTypes != null)
             vehicleTypes = new ArrayList<>(copy.vehicleTypes);
+        enableUTurnTimes = copy.enableUTurnTimes;
     }
 
     public TurnCostsConfig(List<String> vehicleTypes) {
@@ -95,8 +97,18 @@ public class TurnCostsConfig {
         return uTurnCosts;
     }
 
+    @JsonProperty("enable_uturn_times")
+    public boolean getEnableUTurnTimes() {
+        return enableUTurnTimes;
+    }
+
+    public TurnCostsConfig setEnableUTurnTimes(boolean enableUTurnTimes) {
+        this.enableUTurnTimes = enableUTurnTimes;
+        return this;
+    }
+
     @Override
     public String toString() {
-        return "uTurnCosts=" + uTurnCosts + ", vehicleTypes=" + vehicleTypes;
+        return "uTurnCosts=" + uTurnCosts + ",enable_uturn_times=" + enableUTurnTimes + ", vehicleTypes=" + vehicleTypes;
     }
 }

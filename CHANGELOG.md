@@ -1,6 +1,6 @@
-### 12.0 [not yet released]
+### 11.0-osm-reader-callbacks [not yet released]
 
-
+- Fork only: You can instruct GraphHopper to take u-turn penalties into account when calculating travel times. By default, they continue to be ignored for travel time calculation since version 10.0.
 
 ### 11.0 [14 Oct 2025]
 

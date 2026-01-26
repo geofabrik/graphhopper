@@ -34,6 +34,7 @@ public class DefaultTurnCostProvider implements TurnCostProvider {
     private final TurnCostStorage turnCostStorage;
     private final int uTurnCostsInt;
     private final double uTurnCosts;
+    private final boolean uTurnTimesEnabled;
     private final BaseGraph graph;
     private final EdgeIntAccess edgeIntAccess;
     private final CustomWeighting.TurnPenaltyMapping turnPenaltyMapping;
@@ -46,6 +47,7 @@ public class DefaultTurnCostProvider implements TurnCostProvider {
             throw new IllegalArgumentException("u-turn costs must be positive, or equal to " + INFINITE_U_TURN_COSTS + " (=infinite costs)");
         }
         this.uTurnCosts = uTurnCostsInt < 0 ? Double.POSITIVE_INFINITY : uTurnCostsInt;
+        this.uTurnTimesEnabled = tcConfig.getEnableUTurnTimes();
         if (graph.getTurnCostStorage() == null) {
             throw new IllegalArgumentException("No storage set to calculate turn weight");
         }
@@ -57,6 +59,10 @@ public class DefaultTurnCostProvider implements TurnCostProvider {
         this.edgeIntAccess = graph.getBaseGraph().getEdgeAccess();
 
         this.turnPenaltyMapping = turnPenaltyMapping;
+    }
+
+    private boolean isUTurn(int inEdge, int outEdge) {
+        return inEdge == outEdge;
     }
 
     @Override
@@ -79,11 +85,14 @@ public class DefaultTurnCostProvider implements TurnCostProvider {
 
     @Override
     public long calcTurnMillis(int inEdge, int viaNode, int outEdge) {
-        // Making a proper assumption about the turn time is very hard. Assuming zero is the
+        // Making a proper assumption about the turn time is very hard. Assuming zero as default is the
         // simplest way to deal with this. This also means the u-turn time is zero. Provided that
         // the u-turn weight is large enough, u-turns only occur in special situations like curbsides
         // pointing to the end of dead-end streets where it is unclear if a finite u-turn time would
         // be a good choice.
+        if (uTurnTimesEnabled && isUTurn(inEdge, outEdge)) {
+            return (long) (1000 * uTurnCosts);
+        }
         return 0;
     }
 
