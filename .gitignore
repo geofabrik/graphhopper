@@ -6,6 +6,7 @@ nbactions*.xml
 /config.yml
 build.xml
 maven/
+maven_repository/
 measurement*.properties
 gen/
 bin/
