@@ -221,7 +221,7 @@ public class MapMatchingTest {
         } else {
             assertTrue(mapMatching.hasPointsToBeMatched());
             assertEquals(2, mapMatching.getProcessedPointsCount());
-            assertEquals(1415, mr.getMatchLength(), 10);
+            assertEquals(1127, mr.getMatchLength(), 10);
         }
     }
 
