@@ -98,6 +98,14 @@ public class GraphHopperTest {
         Helper.removeDir(new File(GH_LOCATION));
     }
 
+    private void assertRoute(GHResponse response, double distance, int time, int points) {
+        assertFalse(response.hasErrors(), response.getErrors().toString());
+        ResponsePath res = response.getBest();
+        assertEquals(distance, res.getDistance(), .1);
+        assertEquals(time, res.getTime(), 10);
+        assertEquals(points, res.getPoints().size());
+    }
+
     @ParameterizedTest
     @CsvSource({
             DIJKSTRA + ",false,703",
@@ -139,6 +147,37 @@ public class GraphHopperTest {
         rsp = hopper.route(req);
         assertTrue(rsp.hasErrors());
         assertTrue(rsp.getErrors().toString().contains("ConnectionNotFoundException"), rsp.getErrors().toString());
+    }
+
+    @Test
+    public void testUTurnTimes() {
+        Profile uTurnTimes = TestProfiles.accessAndSpeed("uturn_times", "car").
+                setTurnCostsConfig(new TurnCostsConfig(List.of("motorcar", "motor_vehicle"), 60).setEnableUTurnTimes(true));
+        Profile uTurnNoTimes = TestProfiles.accessAndSpeed("uturn_notimes", "car").
+                setTurnCostsConfig(new TurnCostsConfig(List.of("motorcar", "motor_vehicle"), 60).setEnableUTurnTimes(false));
+        // Default u-turn costs are infinite
+        Profile uTurnDefault = TestProfiles.accessAndSpeed("uturn_default", "car").
+                setTurnCostsConfig(new TurnCostsConfig(List.of("motorcar", "motor_vehicle")));
+        GraphHopper hopper = new GraphHopper().
+                setGraphHopperLocation(GH_LOCATION).
+                setOSMFile(KREMS).
+                setEncodedValuesString("car_access, car_average_speed").
+                setProfiles(uTurnTimes, uTurnNoTimes, uTurnDefault).
+                setStoreOnFlush(true);
+        hopper.setMinNetworkSize(0);
+        hopper.importOrLoad();
+        GHRequest req = new GHRequest(48.40734, 15.6683, 48.407162,15.668493)
+                .setAlgorithm(DIJKSTRA)
+                .setProfile("uturn_times");
+        req.putHint(CH.DISABLE, true);
+        GHResponse rsp = hopper.route(req);
+        assertRoute(rsp, 706.7, 96664, 5);
+        req.setProfile("uturn_notimes");
+        rsp = hopper.route(req);
+        assertRoute(rsp, 706.7, 36664, 5);
+        req.setProfile("uturn_default");
+        rsp = hopper.route(req);
+        assertRoute(rsp, 2330.2, 107522, 56);
     }
 
     @Test
