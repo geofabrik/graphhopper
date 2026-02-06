@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.graphhopper</groupId>
         <artifactId>graphhopper-parent</artifactId>
-        <version>11.0-osm-reader-callbacks-SNAPSHOT</version>
+        <version>11.0-osm-reader-callbacks</version>
     </parent>
     <properties>
         <assembly-phase>package</assembly-phase>
