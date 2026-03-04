@@ -879,6 +879,7 @@ public class GraphHopper {
         encodedValuesWithProps.putIfAbsent(VehicleAccess.key("car"), new PMap());
         encodedValuesWithProps.putIfAbsent(RoadClassLink.KEY, new PMap());
         encodedValuesWithProps.putIfAbsent(MaxSpeed.KEY, new PMap());
+        encodedValuesWithProps.putIfAbsent(Layer.KEY, new PMap());
 
         Map<String, List<String>> restrictionVehicleTypesByProfile = getRestrictionVehicleTypesByProfile(profilesByName.values());
 

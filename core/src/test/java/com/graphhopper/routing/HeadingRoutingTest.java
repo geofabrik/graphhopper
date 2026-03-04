@@ -60,6 +60,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -90,6 +91,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -124,6 +126,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -156,6 +159,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -188,6 +192,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -219,6 +224,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraphWithTunnel(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -288,6 +294,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraphWithTunnel(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);
@@ -328,6 +335,7 @@ class HeadingRoutingTest {
                 .add(RoadEnvironment.create())
                 .add(Roundabout.create())
                 .add(MaxSpeed.create())
+                .add(Layer.create())
                 .add(Subnetwork.create("profile")).build();
         BaseGraph graph = createSquareGraph(encodingManager, accessEnc, speedEnc);
         Router router = createRouter(graph, encodingManager);

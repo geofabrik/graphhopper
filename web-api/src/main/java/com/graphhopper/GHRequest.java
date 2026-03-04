@@ -45,6 +45,7 @@ public class GHRequest {
     private List<String> curbsides = new ArrayList<>();
     private List<String> snapPreventions;
     private List<String> pathDetails = new ArrayList<>();
+    private List<Integer> snapLayers = new ArrayList<>();
     private String algo = "";
     private Locale locale = Locale.US;
     private CustomModel customModel;
@@ -230,6 +231,15 @@ public class GHRequest {
 
     public List<String> getPathDetails() {
         return this.pathDetails;
+    }
+
+    public GHRequest setSnapLayers(List<Integer> snapLayers) {
+        this.snapLayers = snapLayers;
+        return this;
+    }
+
+    public List<Integer> getSnapLayers() {
+        return this.snapLayers;
     }
 
     @Override

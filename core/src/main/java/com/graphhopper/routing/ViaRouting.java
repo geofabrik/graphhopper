@@ -20,6 +20,8 @@ package com.graphhopper.routing;
 import com.carrotsearch.hppc.IntArrayList;
 import com.graphhopper.routing.ev.EncodedValueLookup;
 import com.graphhopper.routing.ev.EnumEncodedValue;
+import com.graphhopper.routing.ev.IntEncodedValue;
+import com.graphhopper.routing.ev.Layer;
 import com.graphhopper.routing.ev.RoadClass;
 import com.graphhopper.routing.ev.RoadEnvironment;
 import com.graphhopper.routing.querygraph.QueryGraph;
@@ -49,17 +51,27 @@ import static com.graphhopper.util.Parameters.Routing.CURBSIDE;
  */
 public class ViaRouting {
 
+    private static EdgeFilter applyLayerSnapFilter(EdgeFilter originalFilter, IntEncodedValue layerEncoder,
+                    List<Integer> snapLayers, int placeIndex) {
+        if (snapLayers.isEmpty() || snapLayers.get(placeIndex) == null) {
+            return originalFilter;
+        }
+        return new LayerEdgeFilter(originalFilter, layerEncoder, snapLayers.get(placeIndex));
+    }
+
     /**
      * @throws MultiplePointsNotFoundException in case one or more points could not be resolved
      */
     public static List<Snap> lookup(EncodedValueLookup lookup, List<GHPoint> points, EdgeFilter snapFilter,
                                     LocationIndex locationIndex, List<String> snapPreventions, List<String> pointHints,
-                                    DirectedEdgeFilter directedSnapFilter, List<Double> headings) {
+                                    DirectedEdgeFilter directedSnapFilter, List<Double> headings,
+                                    List<Integer> snapLayers) {
         if (points.size() < 2)
             throw new IllegalArgumentException("At least 2 points have to be specified, but was:" + points.size());
 
         final EnumEncodedValue<RoadClass> roadClassEnc = lookup.getEnumEncodedValue(RoadClass.KEY, RoadClass.class);
         final EnumEncodedValue<RoadEnvironment> roadEnvEnc = lookup.getEnumEncodedValue(RoadEnvironment.KEY, RoadEnvironment.class);
+        final IntEncodedValue layerEnc = lookup.getIntEncodedValue(Layer.KEY);
         EdgeFilter strictEdgeFilter = snapPreventions.isEmpty()
                 ? snapFilter
                 : new SnapPreventionEdgeFilter(snapFilter, roadClassEnc, roadEnvEnc, snapPreventions);
@@ -72,16 +84,23 @@ public class ViaRouting {
                 if (!pointHints.isEmpty() && !Helper.isEmpty(pointHints.get(placeIndex)))
                     throw new IllegalArgumentException("Cannot specify heading and point_hint at the same time. " +
                             "Make sure you specify either an empty point_hint (String) or a NaN heading (double) for point " + placeIndex);
+                if (!snapLayers.isEmpty() && snapLayers.get(placeIndex) != null)
+                    throw new IllegalArgumentException("Cannot specify heading and snap_layers at the same time. " +
+                            "Make sure you specify either an empty snap_layers (null) or a NaN heading (double) for point " + placeIndex);
                 snap = locationIndex.findClosest(point.lat, point.lon, new HeadingEdgeFilter(directedSnapFilter, headings.get(placeIndex), point));
             } else if (!pointHints.isEmpty()) {
-                snap = locationIndex.findClosest(point.lat, point.lon, new NameSimilarityEdgeFilter(strictEdgeFilter,
+                EdgeFilter thisEdgeFilter = applyLayerSnapFilter(strictEdgeFilter, layerEnc, snapLayers, placeIndex);
+                snap = locationIndex.findClosest(point.lat, point.lon, new NameSimilarityEdgeFilter(thisEdgeFilter,
                         pointHints.get(placeIndex), point, 170));
             } else if (!snapPreventions.isEmpty()) {
-                snap = locationIndex.findClosest(point.lat, point.lon, strictEdgeFilter);
+                EdgeFilter thisEdgeFilter = applyLayerSnapFilter(strictEdgeFilter, layerEnc, snapLayers, placeIndex);
+                snap = locationIndex.findClosest(point.lat, point.lon, thisEdgeFilter);
             }
 
-            if (snap == null || !snap.isValid())
-                snap = locationIndex.findClosest(point.lat, point.lon, snapFilter);
+            if (snap == null || !snap.isValid()) {
+                EdgeFilter thisEdgeFilter = applyLayerSnapFilter(snapFilter, layerEnc, snapLayers, placeIndex);
+                snap = locationIndex.findClosest(point.lat, point.lon, thisEdgeFilter);
+            }
             if (!snap.isValid())
                 pointsNotFound.add(placeIndex);
 

@@ -51,6 +51,12 @@ public class DefaultImportRegistry implements ImportRegistry {
                     (lookup, props) -> new OSMRoadEnvironmentParser(
                             lookup.getEnumEncodedValue(RoadEnvironment.KEY, RoadEnvironment.class))
             );
+        else if (Layer.KEY.equals(name)) {
+            return ImportUnit.create(name, props -> Layer.create(),
+                (lookup, props) -> new OSMLayerParser(
+                    lookup.getIntEncodedValue(Layer.KEY))
+            );
+          }
         else if (FootRoadAccess.KEY.equals(name))
             return ImportUnit.create(name, props -> FootRoadAccess.create(),
                     (lookup, props) -> OSMRoadAccessParser.forFoot(

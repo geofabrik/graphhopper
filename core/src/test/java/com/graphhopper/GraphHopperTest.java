@@ -935,6 +935,36 @@ public class GraphHopperTest {
     }
 
     @Test
+    public void testLayerSnapFilter() {
+        final String profile = "profile";
+        GraphHopper hopper = new GraphHopper().
+                setGraphHopperLocation(GH_LOCATION).
+                setOSMFile(KREMS).
+                setEncodedValuesString("car_access, car_average_speed, layer").
+                setProfiles(TestProfiles.accessAndSpeed(profile, "car")).
+                setStoreOnFlush(true).
+                importOrLoad();
+
+        // the heading affects the weight, but not the time
+        GHRequest req = new GHRequest().
+                addPoint(new GHPoint(48.407173,15.624629)).
+                addPoint(new GHPoint(48.3984135, 15.6235307)).
+                setProfile(profile);
+        GHResponse rsp = hopper.route(req);
+        assertFalse(rsp.hasErrors());
+        assertEquals(1496, rsp.getBest().getDistance(), 1);
+        assertEquals(65871, rsp.getBest().getTime(), 1000);
+        req.setSnapLayers(Arrays.asList(3, null));
+        rsp = hopper.route(req);
+        assertFalse(rsp.hasErrors());
+        assertEquals(1000, rsp.getBest().getDistance(), 1);
+        assertEquals(44114, rsp.getBest().getTime(), 1000);
+        req.setHeadings(Arrays.asList(100., 0.));
+        rsp = hopper.route(req);
+        assertTrue(rsp.hasErrors());
+    }
+
+    @Test
     public void testMonacoMaxVisitedNodes() {
         final String profile = "profile";
 
