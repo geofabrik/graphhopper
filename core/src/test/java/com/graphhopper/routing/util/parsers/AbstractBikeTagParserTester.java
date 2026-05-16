@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.graphhopper.routing.util.PriorityCode.*;
+import static com.graphhopper.routing.util.parsers.BikeCommonAverageSpeedParser.PUSHING_SECTION_SPEED;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -98,6 +99,44 @@ public abstract class AbstractBikeTagParserTester {
         int edgeId = 0;
         osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
         return avgSpeedEnc.getDecimal(false, edgeId, intAccess);
+    }
+
+    @Test
+    public void testOnewayPushBackward() {
+        ArrayEdgeIntAccess intAccess = ArrayEdgeIntAccess.createFromBytes(encodingManager.getBytesForFlags());
+        IntsRef relFlags = osmParsers.handleRelationTags(new ReaderRelation(0), osmParsers.createRelationFlags());
+        int edgeId = 0;
+        ReaderWay way = new ReaderWay(1);
+        way.setTag("highway", "residential");
+        way.setTag("oneway", "yes");
+        osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
+        assertTrue(accessEnc.getBool(false, edgeId, intAccess));
+        assertFalse(accessEnc.getBool(true, edgeId, intAccess));
+        assertEquals(18, avgSpeedEnc.getDecimal(false, edgeId, intAccess), 0.1);
+        way.setTag("oneway:bicycle", "no");
+        osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
+        assertTrue(accessEnc.getBool(false, edgeId, intAccess));
+        assertTrue(accessEnc.getBool(true, edgeId, intAccess));
+        assertEquals(18, avgSpeedEnc.getDecimal(false, edgeId, intAccess), 0.1);
+        assertEquals(18, avgSpeedEnc.getDecimal(true, edgeId, intAccess), 0.1);
+        way.setTag("bicycle:backward", "dismount");
+        osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
+        assertTrue(accessEnc.getBool(false, edgeId, intAccess));
+        assertTrue(accessEnc.getBool(true, edgeId, intAccess));
+        assertEquals(18, avgSpeedEnc.getDecimal(false, edgeId, intAccess), 0.1);
+        assertEquals(PUSHING_SECTION_SPEED, avgSpeedEnc.getDecimal(true, edgeId, intAccess), 0.1);
+        way.setTag("oneway:bicycle", "yes");
+        osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
+        assertTrue(accessEnc.getBool(false, edgeId, intAccess));
+        assertTrue(accessEnc.getBool(true, edgeId, intAccess));
+        assertEquals(18, avgSpeedEnc.getDecimal(false, edgeId, intAccess), 0.1);
+        assertEquals(PUSHING_SECTION_SPEED, avgSpeedEnc.getDecimal(true, edgeId, intAccess), 0.1);
+        way.removeTag("oneway:bicycle");
+        osmParsers.handleWayTags(edgeId, intAccess, way, relFlags);
+        assertTrue(accessEnc.getBool(false, edgeId, intAccess));
+        assertTrue(accessEnc.getBool(true, edgeId, intAccess));
+        assertEquals(18, avgSpeedEnc.getDecimal(false, edgeId, intAccess), 0.1);
+        assertEquals(PUSHING_SECTION_SPEED, avgSpeedEnc.getDecimal(true, edgeId, intAccess), 0.1);
     }
 
     @Test
