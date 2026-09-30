@@ -1,3 +1,7 @@
+### 11.1 [29 Sep 2026]
+
+- custom models: conditions accept only the binary operators ==, !=, <, >, <=, >=, &&, ||, +, -, *, / and %; bitwise and shift operators like &, |, ^, << and >> are rejected now
+
 ### 11.0-osm-reader-callbacks [6 Feb 2026]
 
 - Fork only: You can instruct GraphHopper to take u-turn penalties into account when calculating travel times. By default, they continue to be ignored for travel time calculation since version 10.0. Set `profiles[].turn_costs.enable_uturn_times` in your configuration to true in order to instruct GraphHopper to take u-turn penalities into account for travel times.
