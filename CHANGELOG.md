@@ -1,3 +1,7 @@
+### 11.1-osm-reader-callbacks-1 [30 Sep 2026]
+
+- applied upstream security patch
+
 ### 11.1 [29 Sep 2026]
 
 - custom models: conditions accept only the binary operators ==, !=, <, >, <=, >=, &&, ||, +, -, *, / and %; bitwise and shift operators like &, |, ^, << and >> are rejected now
